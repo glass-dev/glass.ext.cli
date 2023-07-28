@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glass.ext.cli"
+description = "GLASS command line interface"
+readme = "README.md"
+requires-python = ">=3.7"
+license = "MIT"
+authors = [
+    { name = "Nicolas Tessore", email = "n.tessore@ucl.ac.uk" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "importlib_metadata>=3.6; python_version<'3.10'",
+    "click",
+    "glass>=2023.6",
+    "glass.ext.config",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+docs = [
+    "sphinx",
+    "sphinxcontrib-katex",
+    "numpydoc",
+    "furo",
+]
+
+[project.urls]
+Homepage = "https://github.com/glass-dev/glass.ext.cli"
+Documentation = "https://glass.readthedocs.io/projects/cli/"
+Issues = "https://github.com/glass-dev/glass.ext.cli/issues"
+
+[project.scripts]
+glass = "glass.ext.cli.__main__:cli"
+
+[project.entry-points."glass.cli"]
+compute = "glass.ext.cli.compute:cli"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.sdist]
+strict-naming = false
+
+[tool.hatch.build.targets.wheel]
+strict-naming = false
