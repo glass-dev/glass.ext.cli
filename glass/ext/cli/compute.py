@@ -70,5 +70,45 @@ def cls(config, force):
     save_cls(path, cls)
 
 
+@cli.command()
+@pass_config
+@click.option("-f", "--force", is_flag=True,
+              help="Force writing over existing file.")
+def lensing_cls(config, force):
+    """Compute lensing spectra for plotting."""
+    import numpy as np
+    from glass.shells import RadialWindow
+    from .plot import nearest_shell
+    method = compute_cls_method(config)
+    path = config.getstr("plot.lensing.cls")
+    echo_method = click.style(method, bold=True, underline=True)
+    echo_path = click.style(path, bold=True, underline=True)
+    click.echo(f"Writing '{echo_method}' lensing Cls to '{echo_path}' ...")
+    if os.path.exists(path) and not force:
+        raise click.ClickException(f"File '{path}' exists "
+                                   "(use --force to overwrite)")
+    config["fields.cls"] = method
+    cosmo = cosmo_from_config(config)
+    shells = shells_from_config(config, cosmo)
+    redshifts = config.getarray(float, "plot.lensing.redshifts")
+    norms = []
+    kerns = []
+    for i in nearest_shell(redshifts, shells):
+        zsrc = shells[i].zeff
+        z = np.linspace(0, zsrc, 1000)
+        w = (3*cosmo.omega_m/2*cosmo.xm(z)/cosmo.xm(zsrc)
+             * cosmo.xm(z, zsrc)*(1 + z)/cosmo.ef(z))
+        n = np.trapz(w, z)
+        w /= n
+        norms += [n]
+        kerns += [RadialWindow(za=z, wa=w, zeff=zsrc)]
+    cls = cls_from_config(config, kerns, cosmo)
+    icls = iter(cls)
+    n = len(norms)
+    cls = [norms[i]*norms[j]*next(icls)
+           for i in range(n) for j in range(i, -1, -1)]
+    save_cls(path, cls)
+
+
 if __name__ == "__main__":
     cli()
