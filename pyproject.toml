@@ -45,6 +45,7 @@ glass = "glass.ext.cli.__main__:cli"
 
 [project.entry-points."glass.cli"]
 compute = "glass.ext.cli.compute:cli"
+config = "glass.ext.cli.config:cli"
 
 [tool.hatch.version]
 source = "vcs"

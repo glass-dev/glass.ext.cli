@@ -10,7 +10,7 @@ else:
 
 import click
 
-from .config import load_config, print_config
+from .config import load_config
 
 
 class CLI(click.MultiCommand):
@@ -26,15 +26,13 @@ class CLI(click.MultiCommand):
 
 
 @click.command(cls=CLI)
-@click.option("-C", "--config", type=click.Path(exists=True, dir_okay=False),
-              multiple=True)
-@click.option("-S", "--show-config", is_flag=True)
-@click.option("--no-defaults", is_flag=True)
+@click.option("-c", "--config", type=click.Path(exists=True, dir_okay=False),
+              multiple=True, help="Configuration file (can be repeated).")
+@click.option("-D", "--no-defaults", is_flag=True,
+              help="Do not load default configuration.")
 @click.pass_context
-def cli(ctx, config, no_defaults, show_config):
+def cli(ctx, config, no_defaults):
     cfg = load_config(config, no_defaults=no_defaults)
-    if show_config:
-        print_config(cfg)
     ctx.obj = cfg
 
 

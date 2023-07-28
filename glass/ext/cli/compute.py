@@ -14,7 +14,6 @@ from .config import config_option
 @click.group()
 def cli():
     """Compute and store simulation files."""
-    pass
 
 
 @cli.command()
