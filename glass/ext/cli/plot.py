@@ -88,7 +88,7 @@ def nearest_shell(redshifts, shells):
     return [np.argmin([abs(z - w.zeff) for w in shells]) for z in redshifts]
 
 
-def plot_correlations(shells, cls):
+def plot_correlations(shells, cls, *, accuracy=1e-2):
 
     cls = split_bins(cls)
 
@@ -110,7 +110,8 @@ def plot_correlations(shells, cls):
 
     axes[0, 0].set_ylim(-0.5, 0.5)
     axes[0, 0].set_xscale("log")
-    axes[0, 0].set_yscale("symlog", linthresh=1e-2, linscale=0.45, subs=None)
+    axes[0, 0].set_yscale("symlog", linthresh=accuracy, linscale=0.45,
+                          subs=None)
     axes[-1, 0].set_xlabel("angular mode number $\\ell$")
     axes[-1, 1].set_xlabel("angular mode number $\\ell$")
 
@@ -125,7 +126,8 @@ def plot_correlations(shells, cls):
     return fig
 
 
-def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls):
+def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
+                 accuracy=1e-2):
 
     from glass.lensing import multi_plane_matrix
 
@@ -160,8 +162,6 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls):
             ax.plot(z, w, c="C0", zorder=0)
 
         for w in shells:
-            if w.zeff > zsrc:
-                break
             ax.axvline(w.zeff, c=plt.rcParams["grid.color"],
                        ls=plt.rcParams["grid.linestyle"],
                        lw=plt.rcParams["grid.linewidth"],
@@ -201,9 +201,10 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls):
 
         ax.grid(True, which="major", axis="y")
 
-    axes[0].set_ylim(-0.9, 0.9)
+    ymax = min(0.9, 100*accuracy)
+    axes[0].set_ylim(-ymax, ymax)
     axes[0].set_xscale("log")
-    axes[0].set_yscale("symlog", linthresh=1e-2, linscale=0.45,
+    axes[0].set_yscale("symlog", linthresh=accuracy, linscale=0.45,
                        subs=[2, 3, 4, 5, 6, 7, 8, 9])
 
     supxlabel(subfigs[1], "angular mode number $\\ell$")
@@ -231,7 +232,8 @@ def correlations(config, path):
     cosmo = cosmo_from_config(config)
     shells = shells_from_config(config, cosmo)
     cls = cls_from_config(config, shells, cosmo)
-    fig = plot_correlations(shells, cls)
+    accuracy = config.getfloat("plot.accuracy", 1e-2)
+    fig = plot_correlations(shells, cls, accuracy=accuracy)
     if path:
         fig.savefig(path, bbox_inches="tight")
         plt.close()
@@ -295,7 +297,9 @@ def lensing(config, path):
     redshifts = config.getarray(float, "plot.lensing.redshifts")
     matter_cls = cls_from_config(config, shells, cosmo)
     lensing_cls = load_cls(config.getstr("plot.lensing.cls"))
-    fig = plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls)
+    accuracy = config.getfloat("plot.accuracy", 1e-2)
+    fig = plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls,
+                       accuracy=accuracy)
     if path:
         fig.savefig(path, bbox_inches="tight")
         plt.close()
