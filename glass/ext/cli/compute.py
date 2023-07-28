@@ -14,22 +14,24 @@ from .config import pass_config
 def compute_cls_method(config):
     """Return the method used for computing Cls.
 
-    This will look at both 'fields.cls' and 'compute.cls' in the
-    configuration, and return the more adequate choice.
+    This will first look at 'compute.cls' in the configuration, and fall
+    back to 'fields.cls' if possible.
 
     """
-    method = config.getstr("fields.cls", None)
-    if method is None or method == "load":
-        try:
-            method = config.getstr("compute.cls")
-        except ConfigError as exc:
-            if method is None:
-                exc.add_note("You must configure 'compute.cls' "
-                             "if 'fields.cls' is not set.")
-            elif method == "load":
-                exc.add_note("You must configure 'compute.cls' "
-                             "if 'fields.cls' is set to 'load'.")
+    try:
+        method = config.getstr("compute.cls")
+    except ConfigError as exc:
+        method = config.getstr("fields.cls", None)
+        if method is None:
+            exc.add_note("You must configure 'compute.cls' "
+                         "if 'fields.cls' is not set.")
             raise
+        elif method == "load":
+            exc.add_note("You must configure 'compute.cls' "
+                         "if 'fields.cls' is set to 'load'.")
+            raise
+        else:
+            pass
     return method
 
 
@@ -45,14 +47,16 @@ def cli():
 def cls(config, force):
     """Compute and store angular matter power spectra."""
     method = compute_cls_method(config)
-    path = config.getstr("fields.cls.path", None)
-    if path is None:
-        try:
-            path = config.getstr("compute.cls.path")
-        except ConfigError as exc:
+    try:
+        path = config.getstr("compute.cls.path")
+    except ConfigError as exc:
+        path = config.getstr("fields.cls.path", None)
+        if path is None:
             exc.add_note("You must configure 'compute.cls.path' "
                          "if 'fields.cls.path' is not set.")
             raise
+        else:
+            pass
     echo_method = click.style(method, bold=True, underline=True)
     echo_path = click.style(path, bold=True, underline=True)
     click.echo(f"Writing '{echo_method}' Cls to '{echo_path}' ...")
