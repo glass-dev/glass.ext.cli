@@ -88,6 +88,35 @@ def nearest_shell(redshifts, shells):
     return [np.argmin([abs(z - w.zeff) for w in shells]) for z in redshifts]
 
 
+def plot_shells(shells):
+    fig, ax = plt.subplots(1, 1, layout="constrained")
+
+    z = []
+    for shell in shells:
+        z = np.union1d(z, shell.za)
+    w = np.zeros_like(z)
+
+    for i, shell in enumerate(shells):
+        if (i > 0 and shells[i-1].za[-1] == shell.za[0]
+                and shells[i-1].wa[-1] == shell.wa[0]):
+            w += np.interp(z, shell.za[1:], shell.wa[1:], left=0., right=0.)
+        else:
+            w += np.interp(z, shell.za, shell.wa, left=0., right=0.)
+        ax.fill_between(shell.za, np.zeros_like(shell.wa), shell.wa,
+                        ec="none", fc="C0", alpha=0.33, zorder=1)
+        ax.axvline(shell.zeff, c=plt.rcParams["grid.color"],
+                   ls=plt.rcParams["grid.linestyle"],
+                   lw=plt.rcParams["grid.linewidth"],
+                   zorder=-2)
+
+    ax.plot(z, w, c="C1", zorder=2)
+
+    ax.set_xlabel("redshift $z$")
+    ax.set_ylabel("window function $W(z)$")
+
+    return fig
+
+
 def plot_correlations(shells, cls, *, accuracy=1e-2):
 
     cls = split_bins(cls)
@@ -221,6 +250,23 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
 @click.group()
 def cli():
     """Generate various diagnostic plots."""
+
+
+@cli.command()
+@click.argument("path", type=click.Path(writable=True), required=False)
+@pass_config
+def shells(config, path):
+    """Plot shells."""
+    from glass.ext.config import cosmo_from_config, shells_from_config
+    use_style()
+    cosmo = cosmo_from_config(config)
+    shells = shells_from_config(config, cosmo)
+    fig = plot_shells(shells)
+    if path:
+        fig.savefig(path, bbox_inches="tight")
+        plt.close()
+    else:
+        plt.show()
 
 
 @cli.command()
