@@ -8,7 +8,7 @@ from glass.user import save_cls
 from glass.ext.config import (cls_from_config, cosmo_from_config,
                               shells_from_config)
 
-from .config import config_option
+from .config import pass_config
 
 
 @click.group()
@@ -21,7 +21,7 @@ def cli():
               help="Force writing over existing file.")
 @click.argument("method")
 @click.argument("path", type=click.Path(writable=True))
-@config_option
+@pass_config
 def cls(config, method, path, force):
     """Compute and store angular matter power spectra."""
     if os.path.exists(path) and not force:

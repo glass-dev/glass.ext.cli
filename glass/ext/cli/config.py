@@ -1,6 +1,6 @@
 # author: Nicolas Tessore <n.tessore@ucl.ac.uk>
 # license: MIT
-"""Module for dealing with config options."""
+"""Commands for dealing with config options."""
 
 import click
 
@@ -11,7 +11,7 @@ from ._util import get_resource
 DEFAULT_FILE = "default.ini"
 LOCAL_FILE = "glass.ini"
 
-config_option = click.make_pass_decorator(Config)
+pass_config = click.make_pass_decorator(Config)
 
 
 def config_files():
@@ -44,7 +44,7 @@ def cli():
 
 
 @cli.command()
-@config_option
+@pass_config
 def show(config):
     """Show the loaded configuration."""
     for key, value in config.items():
@@ -55,7 +55,7 @@ def show(config):
 @click.option("-f", "--force", is_flag=True,
               help="Force writing over existing file.")
 @click.argument("path", type=click.Path(writable=True))
-@config_option
+@pass_config
 def write(config, path, force):
     """Write the loaded configuration to file."""
     import os.path
