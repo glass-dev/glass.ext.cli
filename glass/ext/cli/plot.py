@@ -152,7 +152,8 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
                     ha="right", va="top", backgroundcolor=(1., 1., 1., 0.5))
 
         z = np.arange(0, np.nextafter(zsrc+0.01, zsrc), 0.01)
-        w = 3*cosmo.omega_m/2*cosmo.xm(z)/cosmo.xm(zsrc)*cosmo.xm(z, zsrc)*(1 + z)/cosmo.ef(z)
+        w = (3*cosmo.omega_m/2*cosmo.xm(z)/cosmo.xm(zsrc)
+             * cosmo.xm(z, zsrc)*(1 + z)/cosmo.ef(z))
 
         ax.plot(z, w, "-", c="k", lw=0.5, zorder=1)
 
@@ -192,10 +193,11 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
 
         tl = cl[0][1:]
         al = approx_cls[i][1:]
-        l = np.arange(1, tl.size+1)
+        n = min(tl.size, al.size)
+        l = np.arange(1, n + 1)
         sl = 1/(l + 0.5)**0.5
 
-        ax.plot(l, (al - tl)/np.fabs(tl))
+        ax.plot(l, (al[:n] - tl[:n])/np.fabs(tl[: n]))
         ax.fill_between(l, +sl, -sl,
                         fc=plt.rcParams["hatch.color"], ec="none", zorder=-1)
 
@@ -269,18 +271,18 @@ def lensing_cls(config, force):
     for i in nearest_shell(redshifts, shells):
         zsrc = shells[i].zeff
         z = np.linspace(0, zsrc, 1000)
-        w = 3*cosmo.omega_m/2*cosmo.xm(z)/cosmo.xm(zsrc)*cosmo.xm(z, zsrc)*(1 + z)/cosmo.ef(z)
+        w = (3*cosmo.omega_m/2*cosmo.xm(z)/cosmo.xm(zsrc)
+             * cosmo.xm(z, zsrc)*(1 + z)/cosmo.ef(z))
         n = np.trapz(w, z)
         w /= n
         norms += [n]
         kerns += [RadialWindow(za=z, wa=w, zeff=zsrc)]
     cls = cls_from_config(config, kerns, cosmo)
-    iter_cls = iter(cls)
-    rescaled_cls = []
-    for i in range(len(norms)):
-        for j in range(i, -1, -1):
-            rescaled_cls.append(norms[i]*norms[j]*next(iter_cls))
-    save_cls(path, rescaled_cls)
+    icls = iter(cls)
+    n = len(norms)
+    cls = [norms[i]*norms[j]*next(icls)
+           for i in range(n) for j in range(i, -1, -1)]
+    save_cls(path, cls)
 
 
 @cli.command()
