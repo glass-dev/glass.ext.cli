@@ -243,17 +243,22 @@ def correlations(config, path):
 @pass_config
 @click.option("-f", "--force", is_flag=True,
               help="Force writing over existing file.")
-@click.argument("method")
-@click.argument("path", type=click.Path(writable=True))
-def lensing_cls(config, method, path, force):
+def lensing_cls(config, force):
     """Compute lensing spectra for plotting."""
     from glass.shells import RadialWindow
     from glass.user import save_cls
     from glass.ext.config import (cls_from_config, cosmo_from_config,
                                   shells_from_config)
+    from .compute import compute_cls_method
+    method = compute_cls_method(config)
+    path = config.getstr("plot.lensing.cls")
+    echo_method = click.style(method, bold=True, underline=True)
+    echo_path = click.style(path, bold=True, underline=True)
+    click.echo(f"Writing '{echo_method}' lensing Cls to '{echo_path}' ...")
     if os.path.exists(path) and not force:
         raise click.ClickException(f"File '{path}' exists "
                                    "(use --force to overwrite)")
+    config["fields.cls"] = method
     cosmo = cosmo_from_config(config)
     shells = shells_from_config(config, cosmo)
     redshifts = config.getarray(float, "plot.lensing.redshifts")
@@ -267,7 +272,6 @@ def lensing_cls(config, method, path, force):
         w /= n
         norms += [n]
         kerns += [RadialWindow(za=z, wa=w, zeff=zsrc)]
-    config["fields.cls"] = method
     cls = cls_from_config(config, kerns, cosmo)
     iter_cls = iter(cls)
     rescaled_cls = []
@@ -278,10 +282,9 @@ def lensing_cls(config, method, path, force):
 
 
 @cli.command()
-@click.argument("lensing-cls", type=click.Path(exists=True, readable=True))
 @click.argument("path", type=click.Path(writable=True), required=False)
 @pass_config
-def lensing(config, lensing_cls, path):
+def lensing(config, path):
     """Plot lensing accuracy."""
     from glass.user import load_cls
     from glass.ext.config import (cls_from_config, cosmo_from_config,
@@ -291,7 +294,7 @@ def lensing(config, lensing_cls, path):
     shells = shells_from_config(config, cosmo)
     redshifts = config.getarray(float, "plot.lensing.redshifts")
     matter_cls = cls_from_config(config, shells, cosmo)
-    lensing_cls = load_cls(lensing_cls)
+    lensing_cls = load_cls(config.getstr("plot.lensing.cls"))
     fig = plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls)
     if path:
         fig.savefig(path, bbox_inches="tight")
