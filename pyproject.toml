@@ -51,6 +51,13 @@ plot = "glass.ext.cli.plot:cli"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.build]
+include = [
+  "glass/ext/cli/*.py",
+  "glass/ext/cli/default.ini",
+  "glass/ext/cli/matplotlibrc",
+]
+
 [tool.hatch.build.targets.sdist]
 strict-naming = false
 
