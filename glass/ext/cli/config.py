@@ -25,8 +25,8 @@ def config_files():
 
 
 def load_config(files, *, no_defaults=False):
-    from configparser import ConfigParser
-    parser = ConfigParser()
+    from configparser import ConfigParser, ExtendedInterpolation
+    parser = ConfigParser(interpolation=ExtendedInterpolation())
     parser.optionxform = lambda obj: obj
     if not no_defaults:
         parser.read([get_resource(DEFAULT_FILE), LOCAL_FILE])
