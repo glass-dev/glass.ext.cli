@@ -8,7 +8,8 @@ from glass.ext.config import Config
 
 from ._util import get_resource
 
-DEFAULT_INI = "default.ini"
+DEFAULT_FILE = "default.ini"
+LOCAL_FILE = "glass.ini"
 
 config_option = click.make_pass_decorator(Config)
 
@@ -28,8 +29,7 @@ def load_config(files, *, no_defaults=False):
     parser = ConfigParser()
     parser.optionxform = lambda obj: obj
     if not no_defaults:
-        with get_resource(DEFAULT_INI).open("r") as fp:
-            parser.read_file(fp)
+        parser.read([get_resource(DEFAULT_FILE), LOCAL_FILE])
     for file in files:
         with open(file) as fp:
             parser.read_file(fp)
