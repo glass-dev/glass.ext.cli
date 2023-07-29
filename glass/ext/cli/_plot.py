@@ -190,8 +190,7 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
 
         z, w = [], []
         for k in range(i+1):
-            if (k > 0 and shells[k-1][-1] == shells[k].za[0]
-                    and shells[k-1].wa[-1] != shells[k].wa[0]):
+            if k > 0 and shells[k-1].za[-1] == shells[k].za[0]:
                 ax.plot(z, w, c="C0", zorder=1)
                 z, w = [], []
             wk = lmat[i, k]*shells[k].wa/np.trapz(shells[k].wa, shells[k].za)
@@ -202,9 +201,6 @@ def plot_lensing(redshifts, shells, cosmo, matter_cls, lensing_cls, *,
                 z = shells[k].za
                 w = np.zeros_like(z, dtype=float)
             w += np.interp(z, shells[k].za, wk, left=0., right=0.)
-            if z[-1] > zsrc:
-                z_ = np.union1d(z[z < zsrc], [zsrc])
-                z, w = z_, np.interp(z_, z, w)
         ax.plot(z, w, c="C0", zorder=1)
 
         for w in shells:
