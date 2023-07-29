@@ -78,7 +78,7 @@ def lensing_cls(config, force):
     """Compute lensing spectra for plotting."""
     import numpy as np
     from glass.shells import RadialWindow
-    from .plot import nearest_shell
+    from ._plot import nearest_shell
     method = compute_cls_method(config)
     path = config.getstr("plot.lensing.cls")
     echo_method = click.style(method, bold=True, underline=True)
